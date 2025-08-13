@@ -649,7 +649,7 @@
                     <p class="text-xs text-gray-400 mt-1">0.0001 ETH - 10 ETH</p>
                 </div>
                 <div class="text-sm text-gray-400">
-                    <p>Potential Win: <span id="potentialWin" class="font-bold text-green-500">0.00 ETH</span></p>
+                    <p>Potential Win: <span id="potentialWin" class="font-bold text-green-500">0.00000 ETH</span></p>
                 </div>
                 <div class="flex space-x-2">
                     <button id="cancelBetButton" class="btn btn-danger text-gray-200">Cancel</button>
@@ -1380,7 +1380,7 @@
 
                     if (betOn) {
                         hasActiveBets = true;
-                        const potentialWin = (parseFloat(ethers.formatEther(betAmount)) * betOdds).toFixed(4);
+                        const potentialWin = (parseFloat(ethers.formatEther(betAmount)) * betOdds).toFixed(5);
                         activeBetsHtml += `
                             <div class="bg-white/5 p-3 rounded-lg">
                                 <div>
