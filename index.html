@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sport Betting | Nasi Kotak</title>
+    <link rel="icon" type="image/svg" sizes="32x32" href="/icon.svg">
+    <link rel="icon" type="image/svg" sizes="64x64" href="/icon.svg">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ethers.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        xintegrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Custom font and minor style adjustments */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --color-primary: #3b82f6;
+            /* blue-500 */
+            --color-primary-hover: #2563eb;
+            /* blue-600 */
+            --color-primary-light: #eff6ff;
+            /* blue-50 */
+            --color-danger: #ef4444;
+            /* red-500 */
+            --color-danger-hover: #dc2626;
+            /* red-600 */
+            --color-secondary: #a855f7;
+            /* purple-500 */
+            --color-secondary-hover: #9333ea;
+            /* purple-600 */
+            --color-text-on-primary: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            padding-top: 80px;
+            padding-bottom: 80px;
+            /* Padding untuk navbar bawah di mobile */
+            background-color: #f9fafb;
+            /* gray-50 */
+        }
+
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+
+        .alert-popup {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        .btn {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            color: var(--color-text-on-primary);
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #0ea5e9, #06b6d4, #2563eb);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(to right, #0284c7, #0e7490);
+        }
+
+        .btn-primary:disabled {
+            background-color: #9ca3af;
+            /* gray-400 */
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: linear-gradient(to right, #ef4444, #ec4899, #e11d48);
+            transition: background-image 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(to right, #cf2727, #be185d, #b81644);
+        }
+
+        .status-dot {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: .5;
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen flex items-center justify-center bg-[#101621] bg-[radial-gradient(circle_at_50%_20%,rgba(173,216,230,0.25)_0%,rgba(16,22,33,1)_70%)]">
+
+    <!-- Navbar Atas -->
+    <nav class="bg-[#202121] shadow-md fixed top-0 left-0 right-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0">
+                    <a href="#" class="flex items-center space-x-2">
+                        <img class="h-8 w-auto" src="/icon.svg" alt="Nasi Kotak Logo">
+                        <span class="hidden md:block text-xl font-bold text-gray-300">Nasi Kotak</span>
+                    </a>
+                </div>
+
+                <!-- Menu Navigasi Desktop -->
+                <div class="hidden md:flex md:items-center md:space-x-4">
+                    <a href="/index.html"
+                        class="text-gray-200 bg-white/10 px-3 py-2 rounded-md text-sm font-medium">Sport</a>
+                    <a href="/staking/staking.html"
+                        class="text-gray-300 hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium">Staking</a>
+                    <a href="#" class="text-gray-300 hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium">Farm</a>
+                    <a href="#"
+                        class="text-gray-300 hover:bg-white/5 px-3 py-2 rounded-md text-sm font-medium">Cross-Chain</a>
+                </div>
+
+                <!-- Kontrol Wallet -->
+                <div id="wallet-container" class="flex items-center space-x-2">
+                    <div id="networkButton"
+                        class="flex items-center bg-white/5 text-gray-300 font-semibold py-2 px-2 md:px-4 rounded-lg cursor-pointer">
+                        <!-- Konten diisi oleh JS -->
+                    </div>
+                    <button id="connectButton" class="btn btn-primary px-4 py-2">
+                        Connect Wallet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Alert Popup Container -->
+    <div id="alertContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+
+    <!-- KONTEN UTAMA SPORT BETTING -->
+    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-160px)]">
+        <div class="md:flex md:justify-between md:items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-300 mb-6 md:mb-0">Sport Betting</h1>
+            <div class="flex items-center justify-center space-x-2">
+                <button id="myBetsButton"
+                    class="btn-primary text-gray-200 font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center">
+                    <i class="fa-solid fa-ticket mr-2"></i> My Bets
+                </button>
+                <button id="rewardsButton"
+                    class="btn-primary text-gray-200 font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center">
+                    <i class="fa-solid fa-sack-dollar mr-2"></i> Rewards
+                </button>
+                <button id="historyButton"
+                    class="btn-primary text-gray-200 font-semibold py-2 px-4 rounded-lg shadow-sm flex items-center">
+                    <i class="fa-solid fa-clock-rotate-left mr-2"></i> History
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card Pertandingan 1 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> England - Premier
+                        League</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-16T02:00:00+07:00">Loading time...</span>
+                        <div id="status-match1" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/liverpool.svg" class="w-7 h-7 mr-3 rounded-full" alt="Liverpool logo">
+                        <span class="font-semibold text-lg text-gray-300">Liverpool</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/bournemouth.svg" class="w-7 h-7 mr-3 rounded-full" alt="Bournemouth logo">
+                        <span class="font-semibold text-lg text-gray-300">Bournemouth</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Liverpool', 'oddsA1', 'match1', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA1" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw1', 'match1', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw1" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Bournemouth', 'oddsB1', 'match1', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB1" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 2 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> England - Premier
+                        League</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-16T02:00:00+07:00">Loading time...</span>
+                        <div id="status-match2" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/astonvilla.svg" class="w-7 h-7 mr-3 rounded-full" alt="Aston Villa logo">
+                        <span class="font-semibold text-lg text-gray-300">Aston Villa</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/newcastle.svg" class="w-7 h-7 mr-3 rounded-full" alt="Newcastle logo">
+                        <span class="font-semibold text-lg text-gray-300">Newcastle</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Aston Villa', 'oddsA2', 'match2', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA2" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw2', 'match2', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw2" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Newcastle', 'oddsB2', 'match2', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB2" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 3 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> England - Premier
+                        League</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-17T22:30:00+07:00">Loading time...</span>
+                        <div id="status-match3" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/manutd.svg" class="w-7 h-7 mr-3 rounded-full" alt="Man Utd logo">
+                        <span class="font-semibold text-lg text-gray-300">Man Utd</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/arsenal.svg" class="w-7 h-7 mr-3 rounded-full" alt="Arsenal logo">
+                        <span class="font-semibold text-lg text-gray-300">Arsenal</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Man Utd', 'oddsA3', 'match3', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA3" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw3', 'match3', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw3" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Arsenal', 'oddsB3', 'match3', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB3" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 4 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> England - Premier
+                        League</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-17T20:00:00+07:00">Loading time...</span>
+                        <div id="status-match4" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/chelsea.svg" class="w-7 h-7 mr-3 rounded-full" alt="Chelsea logo">
+                        <span class="font-semibold text-lg text-gray-300">Chelsea</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/crystalpalace.png" class="w-7 h-7 mr-3 rounded-full"
+                            alt="Crystal Palace logo">
+                        <span class="font-semibold text-lg text-gray-300">Crystal Palace</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Chelsea', 'oddsA4', 'match4', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA4" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw4', 'match4', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw4" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Crystal Palace', 'oddsB4', 'match4', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB4" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 5 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> England - Premier
+                        League</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-17T20:00:00+07:00">Loading time...</span>
+                        <div id="status-match5" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/nottinghamforest.png" class="w-7 h-7 mr-3 rounded-full"
+                            alt="Nottingham Forest logo">
+                        <span class="font-semibold text-lg text-gray-300">Nottingham Forest</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/brentford.png" class="w-7 h-7 mr-3 rounded-full" alt="Brentford logo">
+                        <span class="font-semibold text-lg text-gray-300">Brentford</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Nottingham Forest', 'oddsA5', 'match5', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA5" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw5', 'match5', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw5" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Brentford', 'oddsB5', 'match5', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB5" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 6 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> Spain - LaLiga</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-17T00:30:00+07:00">Loading time...</span>
+                        <div id="status-match6" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/mallorca.png" class="w-7 h-7 mr-3 rounded-full" alt="Mallorca logo">
+                        <span class="font-semibold text-lg text-gray-300">Mallorca</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/barcelona.svg" class="w-7 h-7 mr-3 rounded-full" alt="Barcelona logo">
+                        <span class="font-semibold text-lg text-gray-300">Barcelona</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Mallorca', 'oddsA6', 'match6', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA6" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw6', 'match6', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw6" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Barcelona', 'oddsB6', 'match6', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB6" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 7 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> Spain - LaLiga</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-18T02:30:00+07:00">Loading time...</span>
+                        <div id="status-match7" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/espanyol.png" class="w-7 h-7 mr-3 rounded-full" alt="Espanyol logo">
+                        <span class="font-semibold text-lg text-gray-300">Espanyol</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/atleticomadrid.png" class="w-7 h-7 mr-3 rounded-full" alt="Atl. Madrid logo">
+                        <span class="font-semibold text-lg text-gray-300">Atl. Madrid</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Espanyol', 'oddsA7', 'match7', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA7" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw7', 'match7', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw7" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Atl. Madrid', 'oddsB7', 'match7', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB7" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 8 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> France - Ligue 1</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-16T01:45:00+07:00">Loading time...</span>
+                        <div id="status-match8" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/staderennais.png" class="w-7 h-7 mr-3 rounded-full" alt="Rennes logo">
+                        <span class="font-semibold text-lg text-gray-300">Rennes</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/olympiquemarseille.png" class="w-7 h-7 mr-3 rounded-full"
+                            alt="Marseille logo">
+                        <span class="font-semibold text-lg text-gray-300">Marseille</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Rennes', 'oddsA8', 'match8', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA8" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw8', 'match8', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw8" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Marseille', 'oddsB8', 'match8', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB8" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Pertandingan 9 -->
+            <div class="bg-[#2b2b2b] rounded-lg shadow-lg p-4 space-y-3">
+                <div class="flex justify-between items-center text-xs text-gray-400">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-futbol"></i> France - Ligue 1</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="time-display" data-datetime="2025-08-18T01:45:00+07:00">Loading time...</span>
+                        <div id="status-match9" class="status-dot w-2 h-2 rounded-full bg-gray-400"></div>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <img src="/images/nantes.png" class="w-7 h-7 mr-3 rounded-full" alt="Nantes logo">
+                        <span class="font-semibold text-lg text-gray-300">Nantes</span>
+                    </div>
+                    <div class="flex items-center">
+                        <img src="/images/psg.png" class="w-7 h-7 mr-3 rounded-full" alt="PSG logo">
+                        <span class="font-semibold text-lg text-gray-300">PSG</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400">1x2</p>
+                <div class="flex gap-2 text-sm">
+                    <button onclick="openBetModal('Nantes', 'oddsA9', 'match9', 'betTeamA')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>1</span>
+                        <span id="oddsA9" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('Draw', 'oddsDraw9', 'match9', 'betDraw')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>Draw</span>
+                        <span id="oddsDraw9" class="font-bold">...</span>
+                    </button>
+                    <button onclick="openBetModal('PSG', 'oddsB9', 'match9', 'betTeamB')"
+                        class="flex-1 btn-primary p-2 rounded-md flex justify-between items-center text-gray-200">
+                        <span>2</span>
+                        <span id="oddsB9" class="font-bold">...</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <!-- AKHIR KONTEN UTAMA SPORT BETTING -->
+
+
+    <!-- MODALS -->
+    <!-- Modal Pemilihan Jaringan -->
+    <div id="networkModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-sm m-4">
+            <div class="flex justify-between items-center p-4 border-b border-gray-400">
+                <h2 class="text-lg text-gray-300 font-semibold">Select a Network</h2>
+                <button id="closeNetworkModalButton" class="text-gray-400 hover:text-gray-500 text-4xl">&times;</button>
+            </div>
+            <div id="networkList" class="p-2">
+                <!-- Daftar jaringan akan diisi oleh JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detail Dompet -->
+    <div id="walletDetailsModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-sm m-4">
+            <div class="flex justify-between items-center p-4 border-b border-gray-400">
+                <h2 class="text-lg text-gray-300 font-semibold">Your Wallet</h2>
+                <button id="closeWalletDetailsModalButton"
+                    class="text-gray-400 hover:text-gray-500 text-4xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-white/5 p-4 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
+                                class="w-8 h-8" alt="MetaMask">
+                            <span id="walletAddress" class="font-mono text-base text-gray-300"></span>
+                        </div>
+                        <div class="flex items-center space-x-4 text-gray-300">
+                            <button id="copyAddressButton" class="hover:text-blue-400"><i
+                                    class="fa-solid fa-copy"></i></button>
+                            <button id="disconnectButton" class="hover:text-red-400"><i
+                                    class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                        </div>
+                    </div>
+                    <div id="walletBalance" class="text-lg text-gray-300 mt-2"></div>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-300 mb-2">Recent Transactions</h3>
+                    <div id="recentTransactions" class="space-y-2 max-h-40 text-gray-300 overflow-y-auto pr-2"></div>
+                    <a id="viewAllTxButton" href="#" target="_blank"
+                        class="text-blue-400 hover:underline text-sm mt-2 block text-center">View All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Rewards -->
+    <div id="rewardsModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-md m-4">
+            <div class="flex justify-between items-center p-4 border-b border-gray-400">
+                <h2 class="text-lg font-semibold text-gray-300">Available Rewards</h2>
+                <button id="closeRewardsModalButton" class="text-gray-400 hover:text-gray-500 text-4xl">&times;</button>
+            </div>
+            <div id="rewardsContainer" class="p-4 max-h-96 overflow-y-auto space-y-3">
+                <!-- Konten rewards akan diisi oleh JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal History -->
+    <div id="historyModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-md m-4">
+            <div class="flex justify-between items-center p-4 border-b border-gray-400">
+                <h2 class="text-lg font-semibold text-gray-300">Bet History</h2>
+                <button id="closeHistoryModalButton" class="text-gray-400 hover:text-gray-500 text-4xl">&times;</button>
+            </div>
+            <div id="historyContainer" class="p-4 max-h-96 overflow-y-auto space-y-3">
+                <!-- Konten history akan diisi oleh JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal My Bets -->
+    <div id="myBetsModal"
+        class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-md m-4">
+            <div class="flex justify-between items-center p-4 border-b border-gray-400">
+                <h2 class="text-lg font-semibold text-gray-300">My Active Bets</h2>
+                <button id="closeMyBetsModalButton" class="text-gray-400 hover:text-gray-500 text-4xl">&times;</button>
+            </div>
+            <div id="myBetsContainer" class="p-4 max-h-96 overflow-y-auto space-y-3">
+                <!-- Konten my bets akan diisi oleh JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Taruhan -->
+    <div id="betModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-[#2b2b2b] rounded-2xl shadow-lg w-full max-w-sm m-4">
+            <div class="p-6 space-y-4">
+                <h2 id="betModalTitle" class="text-xl font-bold text-gray-300">Place Bet</h2>
+                <p id="betModalSelection" class="font-semibold text-gray-300"></p>
+                <p id="betModalContract" class="text-sm text-gray-400"></p>
+                <div>
+                    <label for="betAmount" class="text-sm font-medium text-gray-400">Amount [<span
+                            class="text-blue-400">ETH</span>]</label>
+                    <div class="relative mt-1">
+                        <input id="betAmount" type="text" inputmode="decimal"
+                            class="w-full p-2 border border-gray-400 text-gray-300 bg-transparent rounded-md"
+                            placeholder="0.0">
+                        <button id="betMaxButton"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/5 text-gray-300 py-1 px-4 rounded-lg font-semibold">MAX</button>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-1">0.0001 ETH - 10 ETH</p>
+                </div>
+                <div class="text-sm text-gray-400">
+                    <p>Potential Win: <span id="potentialWin" class="font-bold text-green-500">0.00 ETH</span></p>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="cancelBetButton" class="btn btn-danger text-gray-200">Cancel</button>
+                    <button id="confirmBetButton" class="btn btn-primary">Confirm Bet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar Bawah untuk Mobile -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-[#2b2b2b] shadow-t-md z-20">
+        <div class="flex justify-around items-center h-16">
+            <a href="/index.html" class="flex flex-col items-center text-gray-400 hover:text-blue-500">
+                <i class="fa-solid fa-retweet text-xl"></i>
+                <span class="text-xs font-medium">Sport</span>
+            </a>
+            <a href="/staking/staking.html" class="flex flex-col items-center text-gray-400 hover:text-blue-500">
+                <i class="fa-solid fa-chart-line text-xl"></i>
+                <span class="text-xs font-medium">Staking</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-400 hover:text-blue-500">
+                <i class="fa-solid fa-tractor text-xl"></i>
+                <span class="text-xs font-medium">Farm</span>
+            </a>
+            <a href="#" class="flex flex-col items-center text-gray-400 hover:text-blue-500">
+                <i class="fa-solid fa-bridge text-xl"></i>
+                <span class="text-xs font-medium">Cross-Chain</span>
+            </a>
+        </div>
+    </nav>
+
+    <script src="history.js"></script>
+    <script>
+        // --- Smart Contract Addresses and ABI ---
+        const contractAddresses = {
+            match1: '0x1C6165499816F666d89EE25e996f5932B917C4fc',
+            match2: '0xFd55aaAe6AeC87186c3325f6983503D3D812d784',
+            match3: '0xfCd04145cc426ECF75e85eEE6b91F855e37BC1b8',
+            match4: '0x8d424f2f5eEC0c9e69308A48aED536C7CEa180bc',
+            match5: '0xEAa3784f10D57964Ad01E5029d30C3b7ae3Eb669',
+            match6: '0xCfea843cE49Ba603DE1dbC7815B52Fb694F4A469',
+            match7: '0x03Fbd7751DB3446195aB7Da2cbE629965058B969',
+            match8: '0x9E3a8C9fB6c5a6B9E50E76e977eB18c611c29707',
+            match9: '0x81d39Faf0F5Ea4dd2f2507504555E2b48Bd69293',
+            match10: '0x2Bc1e4165ee9205AD15745C3C6E648696517435D',
+            match11: '0x8Ca74a1bd46957c4ce2FB672d1c1f987bDC98823',
+            match12: '0x04db3807Cbe7C0E5fB3Ad468453032F0c5fA6CeC'
+        };
+
+        const matchDetails = {
+            match1: { teamA: 'Liverpool', teamB: 'Bournemouth', draw: 'Draw' },
+            match2: { teamA: 'Aston Villa', teamB: 'Newcastle', draw: 'Draw' },
+            match3: { teamA: 'Man Utd', teamB: 'Arsenal', draw: 'Draw' },
+            match4: { teamA: 'Chelsea', teamB: 'Crystal Palace', draw: 'Draw' },
+            match5: { teamA: 'Nottingham Forest', teamB: 'Brentford', draw: 'Draw' },
+            match6: { teamA: 'Mallorca', teamB: 'Barcelona', draw: 'Draw' },
+            match7: { teamA: 'Espanyol', teamB: 'Atl. Madrid', draw: 'Draw' },
+            match8: { teamA: 'Rennes', teamB: 'Marseille', draw: 'Draw' },
+            match9: { teamA: 'Nantes', teamB: 'PSG', draw: 'Draw' },
+            match10: { teamA: 'NaN', teamB: 'NaN', draw: 'Draw' },
+            match11: { teamA: 'NaN', teamB: 'NaN', draw: 'Draw' },
+            match12: { teamA: 'NaN', teamB: 'NaN', draw: 'Draw' }
+        };
+
+        const sportBettingAbi = [{ "inputs": [], "stateMutability": "nonpayable", "type": "constructor" }, { "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "name": "teamABettors", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "name": "teamBBettors", "outputs": [{ "internalType": "address", "name": "", "type": "address" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "", "type": "address" }], "name": "userBets", "outputs": [{ "internalType": "uint256", "name": "teamA", "type": "uint256" }, { "internalType": "uint256", "name": "teamB", "type": "uint256" }, { "internalType": "uint256", "name": "draw", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "bettingOpen", "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "oddsTeamA", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "oddsTeamB", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "oddsDraw", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [{ "internalType": "address", "name": "user", "type": "address" }], "name": "getPendingReward", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "claimReward", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "betTeamA", "outputs": [], "stateMutability": "payable", "type": "function" }, { "inputs": [], "name": "betTeamB", "outputs": [], "stateMutability": "payable", "type": "function" }, { "inputs": [], "name": "betDraw", "outputs": [], "stateMutability": "payable", "type": "function" }];
+
+        // --- Network Configuration ---
+        const supportedNetworks = {
+            '0xaa39db': { // 3940
+                chainId: '0xaa39db',
+                chainName: 'RISE Testnet',
+                rpcUrls: ['https://testnet.riselabs.xyz'],
+                nativeCurrency: { name: 'RISE Testnet', symbol: 'ETH', decimals: 18 },
+                blockExplorerUrls: ['https://explorer.testnet.riselabs.xyz'],
+                logoURI: '/rise.jpg'
+            }
+        };
+
+        // --- Global State ---
+        let provider, signer, userAddress;
+        let currentNetwork = supportedNetworks['0xaa39db']; // Default to Nexus
+        let currentBet = {}; // To store temporary bet info
+
+        // --- UI Elements ---
+        const connectButton = document.getElementById('connectButton');
+        const alertContainer = document.getElementById('alertContainer');
+        const networkButton = document.getElementById('networkButton');
+        const networkModal = document.getElementById('networkModal');
+        const closeNetworkModalButton = document.getElementById('closeNetworkModalButton');
+        const networkList = document.getElementById('networkList');
+
+        // Wallet Details Modal UI Elements
+        const walletDetailsModal = document.getElementById('walletDetailsModal');
+        const closeWalletDetailsModalButton = document.getElementById('closeWalletDetailsModalButton');
+        const walletAddress = document.getElementById('walletAddress');
+        const copyAddressButton = document.getElementById('copyAddressButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const walletBalance = document.getElementById('walletBalance');
+        const recentTransactions = document.getElementById('recentTransactions');
+        const viewAllTxButton = document.getElementById('viewAllTxButton');
+
+        // New Buttons & Modals
+        const rewardsButton = document.getElementById('rewardsButton');
+        const historyButton = document.getElementById('historyButton');
+        const rewardsModal = document.getElementById('rewardsModal');
+        const historyModal = document.getElementById('historyModal');
+        const myBetsModal = document.getElementById('myBetsModal');
+        const closeRewardsModalButton = document.getElementById('closeRewardsModalButton');
+        const closeHistoryModalButton = document.getElementById('closeHistoryModalButton');
+        const closeMyBetsModalButton = document.getElementById('closeMyBetsModalButton');
+        const rewardsContainer = document.getElementById('rewardsContainer');
+        const historyContainer = document.getElementById('historyContainer');
+        const myBetsContainer = document.getElementById('myBetsContainer');
+
+        // Bet Modal UI Elements
+        const betModal = document.getElementById('betModal');
+        const betModalTitle = document.getElementById('betModalTitle');
+        const betModalSelection = document.getElementById('betModalSelection');
+        const betModalContract = document.getElementById('betModalContract');
+        const betAmountInput = document.getElementById('betAmount');
+        const betMaxButton = document.getElementById('betMaxButton');
+        const potentialWinEl = document.getElementById('potentialWin');
+        const cancelBetButton = document.getElementById('cancelBetButton');
+        const confirmBetButton = document.getElementById('confirmBetButton');
+
+
+        // --- Functions ---
+
+        function showAlert(message, type = 'info', txHash = null) {
+            const alertId = `alert-${Date.now()}`;
+            const colors = {
+                success: 'bg-white/10 border-green-400 text-gray-300',
+                error: 'bg-white/10 border-red-400 text-red-300',
+                info: 'bg-white/10 border-blue-400 text-blue-300',
+            };
+            const icon = {
+                success: '<i class="fa-solid fa-check-circle text-green-500 text-lg"></i>',
+                error: '<i class="fa-solid fa-circle-xmark text-red-500 text-lg"></i>',
+                info: '<i class="fa-solid fa-circle-info text-blue-500 text-lg"></i>',
+            };
+
+            const explorerLink = txHash
+                ? `<a href="${currentNetwork.blockExplorerUrls[0]}/tx/${txHash}" target="_blank" class="text-sm text-blue-400 hover:underline">View on Explorer</a>`
+                : '';
+
+            const alertElement = document.createElement('div');
+            alertElement.id = alertId;
+            alertElement.className = `
+        alert-popup transform translate-x-full opacity-0
+        max-w-sm w-full p-4 border-l-4 rounded-lg shadow-md
+        flex items-center gap-3 transition-all duration-500 ease-out
+        ${colors[type]}
+    `;
+            alertElement.innerHTML = `
+        <div class="mt-0.5">${icon[type]}</div>
+        <div class="flex-1">
+            <p class="text-sm font-semibold">${message}</p>
+            ${explorerLink}
+        </div>
+        <button onclick="document.getElementById('${alertId}').remove()" 
+            class="ml-2 p-1 rounded-full hover:bg-black/10 transition-colors">
+            <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+    `;
+
+            alertContainer.appendChild(alertElement);
+
+            // Animate in
+            setTimeout(() => {
+                alertElement.classList.remove('translate-x-full', 'opacity-0');
+            }, 50);
+
+            // Auto-dismiss
+            setTimeout(() => {
+                alertElement.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => alertElement.remove(), 500);
+            }, 5000);
+        }
+
+        async function updateConnectButton() {
+            if (!signer) {
+                connectButton.innerHTML = `Connect Wallet`;
+                connectButton.onclick = connectWallet;
+                connectButton.classList.add('btn', 'btn-primary');
+                connectButton.classList.remove('bg-white/5', 'text-gray-300', 'font-semibold', 'py-2', 'px-4', 'rounded-lg', 'cursor-pointer');
+                return;
+            };
+
+            const balance = await provider.getBalance(userAddress);
+
+            connectButton.innerHTML = `
+                <div class="hidden md:flex items-center space-x-2">
+                    <span class="font-semibold text-sm">${parseFloat(ethers.formatEther(balance)).toFixed(4)} ${currentNetwork.nativeCurrency.symbol}</span>
+                    <span class="btn-primary text-gray-300 text-sm font-semibold px-3 py-1 rounded-lg">${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}</span>
+                </div>
+                <div class="md:hidden">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            `;
+
+            connectButton.classList.remove('btn', 'btn-primary');
+            connectButton.classList.add('bg-white/5', 'text-gray-300', 'font-semibold', 'py-2', 'px-2', 'md:px-4', 'rounded-lg', 'cursor-pointer');
+
+            connectButton.onclick = () => {
+                openModal('walletDetailsModal');
+                updateWalletDetailsModal();
+            };
+        }
+
+        async function connectWallet() {
+            if (typeof window.ethereum === 'undefined') {
+                showAlert('MetaMask is not installed!', 'error');
+                return;
+            }
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (!accounts || accounts.length === 0) {
+                    showAlert('Please connect to MetaMask.', 'info');
+                    return;
+                }
+
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                handleChainChanged(chainId);
+
+                if (chainId !== currentNetwork.chainId) {
+                    await switchNetwork(currentNetwork);
+                }
+
+                provider = new ethers.BrowserProvider(window.ethereum);
+                signer = await provider.getSigner();
+                userAddress = await signer.getAddress();
+
+                await updateConnectButton();
+
+                showAlert('Wallet connected!', 'success');
+                localStorage.setItem('walletConnected', 'true');
+
+            } catch (error) {
+                console.error("Failed to connect wallet:", error);
+                showAlert('Failed to connect wallet.', 'error');
+            }
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function switchNetwork(network) {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: network.chainId }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [network],
+                        });
+                    } catch (addError) {
+                        console.error("Failed to add network:", addError);
+                        showAlert(`Failed to add ${network.chainName}.`, 'error');
+                    }
+                } else {
+                    console.error("Failed to switch network:", switchError);
+                    showAlert('Failed to switch network.', 'error');
+                }
+            }
+        }
+
+        function updateNetworkButton(network) {
+            networkButton.innerHTML = `
+                <img src="${network.logoURI}" class="w-6 h-6 mr-2 rounded-full">
+                <span>${network.chainName}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 hidden md:block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+            `;
+        }
+
+        function renderNetworkList() {
+            networkList.innerHTML = '';
+            for (const chainId in supportedNetworks) {
+                const network = supportedNetworks[chainId];
+                const networkElement = document.createElement('div');
+                networkElement.className = 'w-full flex items-center p-3 rounded-lg text-left';
+                networkElement.innerHTML = `
+                    <img src="${network.logoURI}" class="w-8 h-8 mr-4 rounded-full">
+                    <div>
+                        <p class="font-bold text-gray-300">${network.chainName}</p>
+                    </div>
+                `;
+                networkList.appendChild(networkElement);
+            }
+        }
+
+        function handleChainChanged(chainId) {
+            const network = supportedNetworks[chainId];
+            if (network) {
+                currentNetwork = network;
+                updateNetworkButton(currentNetwork);
+                if (signer) {
+                    updateConnectButton();
+                }
+            } else {
+                networkButton.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation text-red-500 mr-2"></i>
+                    <span>Unsupported Network</span>
+                `;
+            }
+        }
+
+        async function updateWalletDetailsModal() {
+            if (!signer) return;
+
+            const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+            walletAddress.textContent = shortAddress;
+
+            walletBalance.innerHTML = `<span class="text-gray-500">Loading...</span>`;
+            const balance = await provider.getBalance(userAddress);
+            walletBalance.innerHTML = `Balance : ${parseFloat(ethers.formatEther(balance)).toFixed(4)} ${currentNetwork.nativeCurrency.symbol}`;
+
+            viewAllTxButton.href = `${currentNetwork.blockExplorerUrls[0]}/address/${userAddress}`;
+
+            recentTransactions.innerHTML = `<p class="text-gray-400 text-sm text-center">Transaction history coming soon.</p>`;
+        }
+
+        async function loadMatchData() {
+            const tempProvider = new ethers.JsonRpcProvider(currentNetwork.rpcUrls[0]);
+
+            // Match 1
+            const contract1 = new ethers.Contract(contractAddresses.match1, sportBettingAbi, tempProvider);
+            const oddsA1 = await contract1.oddsTeamA();
+            const oddsB1 = await contract1.oddsTeamB();
+            const oddsDraw1 = await contract1.oddsDraw();
+            document.getElementById('oddsA1').textContent = (Number(oddsA1) / 100).toFixed(2);
+            document.getElementById('oddsB1').textContent = (Number(oddsB1) / 100).toFixed(2);
+            document.getElementById('oddsDraw1').textContent = (Number(oddsDraw1) / 100).toFixed(2);
+
+            // Match 2
+            const contract2 = new ethers.Contract(contractAddresses.match2, sportBettingAbi, tempProvider);
+            const oddsA2 = await contract2.oddsTeamA();
+            const oddsB2 = await contract2.oddsTeamB();
+            const oddsDraw2 = await contract2.oddsDraw();
+            document.getElementById('oddsA2').textContent = (Number(oddsA2) / 100).toFixed(2);
+            document.getElementById('oddsB2').textContent = (Number(oddsB2) / 100).toFixed(2);
+            document.getElementById('oddsDraw2').textContent = (Number(oddsDraw2) / 100).toFixed(2);
+
+            // Match 3
+            const contract3 = new ethers.Contract(contractAddresses.match3, sportBettingAbi, tempProvider);
+            const oddsA3 = await contract3.oddsTeamA();
+            const oddsB3 = await contract3.oddsTeamB();
+            const oddsDraw3 = await contract3.oddsDraw();
+            document.getElementById('oddsA3').textContent = (Number(oddsA3) / 100).toFixed(2);
+            document.getElementById('oddsB3').textContent = (Number(oddsB3) / 100).toFixed(2);
+            document.getElementById('oddsDraw3').textContent = (Number(oddsDraw3) / 100).toFixed(2);
+
+            // Match 4
+            const contract4 = new ethers.Contract(contractAddresses.match4, sportBettingAbi, tempProvider);
+            const oddsA4 = await contract4.oddsTeamA();
+            const oddsB4 = await contract4.oddsTeamB();
+            const oddsDraw4 = await contract4.oddsDraw();
+            document.getElementById('oddsA4').textContent = (Number(oddsA4) / 100).toFixed(2);
+            document.getElementById('oddsB4').textContent = (Number(oddsB4) / 100).toFixed(2);
+            document.getElementById('oddsDraw4').textContent = (Number(oddsDraw4) / 100).toFixed(2);
+
+            // Match 5
+            const contract5 = new ethers.Contract(contractAddresses.match5, sportBettingAbi, tempProvider);
+            const oddsA5 = await contract5.oddsTeamA();
+            const oddsB5 = await contract5.oddsTeamB();
+            const oddsDraw5 = await contract5.oddsDraw();
+            document.getElementById('oddsA5').textContent = (Number(oddsA5) / 100).toFixed(2);
+            document.getElementById('oddsB5').textContent = (Number(oddsB5) / 100).toFixed(2);
+            document.getElementById('oddsDraw5').textContent = (Number(oddsDraw5) / 100).toFixed(2);
+
+            // Match 6
+            const contract6 = new ethers.Contract(contractAddresses.match6, sportBettingAbi, tempProvider);
+            const oddsA6 = await contract6.oddsTeamA();
+            const oddsB6 = await contract6.oddsTeamB();
+            const oddsDraw6 = await contract6.oddsDraw();
+            document.getElementById('oddsA6').textContent = (Number(oddsA6) / 100).toFixed(2);
+            document.getElementById('oddsB6').textContent = (Number(oddsB6) / 100).toFixed(2);
+            document.getElementById('oddsDraw6').textContent = (Number(oddsDraw6) / 100).toFixed(2);
+
+            // Match 7
+            const contract7 = new ethers.Contract(contractAddresses.match7, sportBettingAbi, tempProvider);
+            const oddsA7 = await contract7.oddsTeamA();
+            const oddsB7 = await contract7.oddsTeamB();
+            const oddsDraw7 = await contract7.oddsDraw();
+            document.getElementById('oddsA7').textContent = (Number(oddsA7) / 100).toFixed(2);
+            document.getElementById('oddsB7').textContent = (Number(oddsB7) / 100).toFixed(2);
+            document.getElementById('oddsDraw7').textContent = (Number(oddsDraw7) / 100).toFixed(2);
+
+            // Match 8
+            const contract8 = new ethers.Contract(contractAddresses.match8, sportBettingAbi, tempProvider);
+            const oddsA8 = await contract8.oddsTeamA();
+            const oddsB8 = await contract8.oddsTeamB();
+            const oddsDraw8 = await contract8.oddsDraw();
+            document.getElementById('oddsA8').textContent = (Number(oddsA8) / 100).toFixed(2);
+            document.getElementById('oddsB8').textContent = (Number(oddsB8) / 100).toFixed(2);
+            document.getElementById('oddsDraw8').textContent = (Number(oddsDraw8) / 100).toFixed(2);
+
+            // Match 9
+            const contract9 = new ethers.Contract(contractAddresses.match9, sportBettingAbi, tempProvider);
+            const oddsA9 = await contract9.oddsTeamA();
+            const oddsB9 = await contract9.oddsTeamB();
+            const oddsDraw9 = await contract9.oddsDraw();
+            document.getElementById('oddsA9').textContent = (Number(oddsA9) / 100).toFixed(2);
+            document.getElementById('oddsB9').textContent = (Number(oddsB9) / 100).toFixed(2);
+            document.getElementById('oddsDraw9').textContent = (Number(oddsDraw9) / 100).toFixed(2);
+
+            // Match 10
+            const contract10 = new ethers.Contract(contractAddresses.match10, sportBettingAbi, tempProvider);
+            const oddsA10 = await contract10.oddsTeamA();
+            const oddsB10 = await contract10.oddsTeamB();
+            const oddsDraw10 = await contract10.oddsDraw();
+            document.getElementById('oddsA10').textContent = (Number(oddsA10) / 100).toFixed(2);
+            document.getElementById('oddsB10').textContent = (Number(oddsB10) / 100).toFixed(2);
+            document.getElementById('oddsDraw10').textContent = (Number(oddsDraw10) / 100).toFixed(2);
+
+            // Match 11
+            const contract11 = new ethers.Contract(contractAddresses.match11, sportBettingAbi, tempProvider);
+            const oddsA11 = await contract11.oddsTeamA();
+            const oddsB11 = await contract11.oddsTeamB();
+            const oddsDraw11 = await contract11.oddsDraw();
+            document.getElementById('oddsA11').textContent = (Number(oddsA11) / 100).toFixed(2);
+            document.getElementById('oddsB11').textContent = (Number(oddsB11) / 100).toFixed(2);
+            document.getElementById('oddsDraw11').textContent = (Number(oddsDraw11) / 100).toFixed(2);
+
+            // Match 12
+            const contract12 = new ethers.Contract(contractAddresses.match12, sportBettingAbi, tempProvider);
+            const oddsA12 = await contract12.oddsTeamA();
+            const oddsB12 = await contract12.oddsTeamB();
+            const oddsDraw12 = await contract12.oddsDraw();
+            document.getElementById('oddsA12').textContent = (Number(oddsA12) / 100).toFixed(2);
+            document.getElementById('oddsB12').textContent = (Number(oddsB12) / 100).toFixed(2);
+            document.getElementById('oddsDraw12').textContent = (Number(oddsDraw12) / 100).toFixed(2);
+        }
+
+        async function fetchRewards() {
+            if (!signer) {
+                showAlert('Please connect your wallet to see rewards.', 'info');
+                return;
+            }
+            openModal('rewardsModal');
+            rewardsContainer.innerHTML = '<p class="text-center text-gray-400">Loading rewards...</p>';
+
+            let totalRewards = 0;
+            let rewardsHtml = '';
+
+            for (const [matchKey, address] of Object.entries(contractAddresses)) {
+                try {
+                    const contract = new ethers.Contract(address, sportBettingAbi, signer);
+                    const reward = await contract.getPendingReward(userAddress);
+                    const ethReward = parseFloat(ethers.formatEther(reward));
+
+                    if (ethReward > 0) {
+                        totalRewards += ethReward;
+                        rewardsHtml += `
+                            <div class="bg-white/5 p-3 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p class="font-semibold text-gray-300">
+                                        Contract: <a href="${currentNetwork.blockExplorerUrls[0]}/address/${address}" target="_blank" class="text-gray-300 hover:underline">${address.substring(0, 6)}...${address.substring(address.length - 4)}</a>
+                                    </p>
+                                    <p class="text-sm text-gray-300">Reward: <span class="font-bold text-blue-400">${ethReward.toFixed(4)} ETH</span></p>
+                                </div>
+                                <button onclick="claimReward('${address}')" class="btn btn-primary btn-sm w-auto px-4">Claim</button>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error(`Error fetching reward for ${matchKey}:`, error);
+                }
+            }
+
+            if (totalRewards === 0) {
+                rewardsContainer.innerHTML = '<p class="text-center text-gray-400">No rewards available to claim.</p>';
+            } else {
+                rewardsContainer.innerHTML = rewardsHtml;
+            }
+        }
+
+        async function claimReward(contractAddress) {
+            if (!signer) return;
+            const contract = new ethers.Contract(contractAddress, sportBettingAbi, signer);
+            try {
+                const tx = await contract.claimReward();
+                showAlert('Claim transaction submitted...', 'info', tx.hash);
+                await tx.wait();
+                showAlert('Reward claimed successfully!', 'success', tx.hash);
+                fetchRewards(); // Refresh rewards list
+            } catch (error) {
+                console.error("Claim failed:", error);
+                showAlert(error.reason || 'Claim failed.', 'error');
+            }
+        }
+
+        function showHistory() {
+            if (!userAddress) {
+                showAlert('Please connect your wallet to see your history.', 'info');
+                return;
+            }
+            openModal('historyModal');
+            historyContainer.innerHTML = '<p class="text-center text-gray-400">Loading history...</p>';
+
+            const userHistory = matches.filter(match =>
+                Object.values(match.bets).some(teamBets =>
+                    teamBets.some(bet => bet.address.toLowerCase() === userAddress.toLowerCase())
+                )
+            );
+
+            if (userHistory.length === 0) {
+                historyContainer.innerHTML = '<p class="text-center text-gray-400">No betting history found.</p>';
+                return;
+            }
+
+            let historyHtml = '';
+            userHistory.forEach(match => {
+                const [userTeam, teamBets] = Object.entries(match.bets).find(([team, bettors]) =>
+                    bettors.some(b => b.address.toLowerCase() === userAddress.toLowerCase())
+                ) || [];
+
+                const userBet = teamBets.find(b => b.address.toLowerCase() === userAddress.toLowerCase());
+                const status = userTeam === match.winner ? "Win" : "Lost";
+                const statusColor = status === "Win" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+                const odds = parseFloat(match.odds[userTeam]);
+                const betAmount = parseFloat(userBet.bet);
+                const payout = status === "Win" ? (betAmount * odds).toFixed(4) : "0.0000";
+
+                historyHtml += `
+                    <div class="bg-white/5 p-4 rounded-lg space-y-3">
+                        <div class="flex justify-between items-center text-xs text-gray-400">
+                            <a href="${currentNetwork.blockExplorerUrls[0]}/address/${match.contract}" target="_blank" class="font-mono hover:underline">${match.contract.substring(0, 6)}...${match.contract.substring(match.contract.length - 4)}</a>
+                            <span class="date-display" data-date="${match.date}"></span>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-lg text-gray-300">${match.teamA} - ${match.teamB}</p>
+                            <div class="flex justify-between items-center">
+                                <p class="text-sm text-gray-400">Match Winner: <span class="font-bold text-blue-400">${match.winner}</span></p>
+                                <span class="text-xs font-bold px-2 py-1 rounded-full ${statusColor}">${status}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm pt-2 border-t border-gray-400">
+                            <div class="text-left">
+                                <p class="text-gray-400">Team</p>
+                                <p class="font-semibold text-blue-400">${userTeam}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gray-400">Odd</p>
+                                <p class="font-semibold text-gray-300">${odds.toFixed(4)}</p>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-gray-400">Bet</p>
+                                <p class="font-semibold text-gray-300">${userBet.bet}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gray-400">Payout</p>
+                                <p class="font-semibold text-green-500">${payout} ETH</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            historyContainer.innerHTML = historyHtml;
+            formatAllDates();
+        }
+
+        function openBetModal(selection, oddsId, matchKey, betFunction) {
+            if (!signer) {
+                showAlert('Please connect your wallet to place a bet.', 'info');
+                return;
+            }
+            const odds = parseFloat(document.getElementById(oddsId).textContent);
+
+            currentBet = {
+                selection,
+                odds,
+                contractAddress: contractAddresses[matchKey],
+                betFunction
+            };
+
+            betModalSelection.textContent = `Your Bet: ${selection} @ ${odds.toFixed(2)}`;
+            betAmountInput.value = '';
+            potentialWinEl.textContent = '0.0000 ETH';
+            betModalContract.innerHTML = `Contract: <a href="${currentNetwork.blockExplorerUrls[0]}/address/${currentBet.contractAddress}" target="_blank" class="text-gray-400 hover:underline">${currentBet.contractAddress.substring(0, 6)}...${currentBet.contractAddress.substring(currentBet.contractAddress.length - 4)}</a>`;
+            openModal('betModal');
+        }
+
+        function calculatePotentialWin() {
+            const amount = parseFloat(betAmountInput.value) || 0;
+            const winAmount = (amount * currentBet.odds).toFixed(4);
+            potentialWinEl.textContent = `${winAmount} ETH`;
+        }
+
+        async function handleConfirmBet() {
+            const amount = betAmountInput.value;
+            if (!amount || parseFloat(amount) <= 0) {
+                showAlert('Please enter a valid amount.', 'error');
+                return;
+            }
+            if (parseFloat(amount) < 0.0001) {
+                showAlert('Bet amount must be at least 0.0001 ETH.', 'error');
+                return;
+            }
+            if (parseFloat(amount) > 10) {
+                showAlert('Bet amount cannot exceed 10 ETH.', 'error');
+                return;
+            }
+
+            const amountWei = ethers.parseEther(amount);
+            const contract = new ethers.Contract(currentBet.contractAddress, sportBettingAbi, signer);
+
+            try {
+                const tx = await contract[currentBet.betFunction]({ value: amountWei });
+                showAlert('Bet transaction submitted...', 'info', tx.hash);
+                await tx.wait();
+                showAlert('Bet placed successfully!', 'success', tx.hash);
+                closeModal('betModal');
+                updateConnectButton();
+            } catch (error) {
+                console.error("Bet failed:", error);
+                showAlert(error.reason || 'Bet failed.', 'error');
+            }
+        }
+
+        function formatAllDates() {
+            document.querySelectorAll('.time-display').forEach(el => {
+                const dt = new Date(el.dataset.datetime);
+                const today = new Date();
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+
+                let dayString;
+                if (dt.toDateString() === today.toDateString()) {
+                    dayString = 'Today';
+                } else if (dt.toDateString() === tomorrow.toDateString()) {
+                    dayString = 'Tomorrow';
+                } else {
+                    dayString = dt.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' });
+                }
+
+                const timeString = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+                el.textContent = `${dayString}, ${timeString}`;
+            });
+
+            document.querySelectorAll('.date-display').forEach(el => {
+                const dt = new Date(el.dataset.date);
+                el.textContent = dt.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            });
+        }
+
+        async function updateMatchStatus(contractAddress, statusElementId) {
+            const tempProvider = new ethers.JsonRpcProvider(currentNetwork.rpcUrls[0]);
+            const contract = new ethers.Contract(contractAddress, sportBettingAbi, tempProvider);
+            const statusDot = document.getElementById(statusElementId);
+
+            try {
+                const isOpen = await contract.bettingOpen();
+                statusDot.classList.remove('bg-gray-400', 'bg-green-500', 'bg-red-500');
+                if (isOpen) {
+                    statusDot.classList.add('bg-green-500');
+                } else {
+                    statusDot.classList.add('bg-red-500');
+                }
+            } catch (error) {
+                console.error(`Could not get status for ${contractAddress}`, error);
+                statusDot.classList.remove('bg-green-500', 'bg-red-500');
+                statusDot.classList.add('bg-gray-400'); // Default to gray on error
+            }
+        }
+
+        function updateAllMatchStatuses() {
+            updateMatchStatus(contractAddresses.match1, 'status-match1');
+            updateMatchStatus(contractAddresses.match2, 'status-match2');
+            updateMatchStatus(contractAddresses.match3, 'status-match3');
+            updateMatchStatus(contractAddresses.match4, 'status-match4');
+            updateMatchStatus(contractAddresses.match5, 'status-match5');
+            updateMatchStatus(contractAddresses.match6, 'status-match6');
+            updateMatchStatus(contractAddresses.match7, 'status-match7');
+            updateMatchStatus(contractAddresses.match8, 'status-match8');
+            updateMatchStatus(contractAddresses.match9, 'status-match9');
+            updateMatchStatus(contractAddresses.match10, 'status-match10');
+            updateMatchStatus(contractAddresses.match11, 'status-match11');
+            updateMatchStatus(contractAddresses.match12, 'status-match12');
+        }
+
+        async function showMyBets() {
+            if (!signer) {
+                showAlert('Please connect your wallet to see your bets.', 'info');
+                return;
+            }
+            openModal('myBetsModal');
+            myBetsContainer.innerHTML = '<p class="text-center text-gray-400">Loading your bets...</p>';
+
+            let activeBetsHtml = '';
+            let hasActiveBets = false;
+
+            for (const [matchKey, address] of Object.entries(contractAddresses)) {
+                try {
+                    const contract = new ethers.Contract(address, sportBettingAbi, signer);
+                    const userBets = await contract.userBets(userAddress);
+
+                    let betOn = null;
+                    let betAmount = 0;
+                    let betOdds = 0;
+
+                    if (userBets.teamA > 0) {
+                        betOn = matchDetails[matchKey].teamA;
+                        betAmount = userBets.teamA;
+                        const odds = await contract.oddsTeamA();
+                        betOdds = Number(odds) / 100;
+                    } else if (userBets.teamB > 0) {
+                        betOn = matchDetails[matchKey].teamB;
+                        betAmount = userBets.teamB;
+                        const odds = await contract.oddsTeamB();
+                        betOdds = Number(odds) / 100;
+                    } else if (userBets.draw > 0) {
+                        betOn = matchDetails[matchKey].draw;
+                        betAmount = userBets.draw;
+                        const odds = await contract.oddsDraw();
+                        betOdds = Number(odds) / 100;
+                    }
+
+                    if (betOn) {
+                        hasActiveBets = true;
+                        const potentialWin = (parseFloat(ethers.formatEther(betAmount)) * betOdds).toFixed(4);
+                        activeBetsHtml += `
+                            <div class="bg-white/5 p-3 rounded-lg">
+                                <div>
+                                <p class="font-semibold text-gray-300 pb-2">${matchDetails[matchKey].teamA} - ${matchDetails[matchKey].teamB}</p>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm pt-2 border-t border-gray-400">
+                                <div class="text-left">
+                                    <p class="text-gray-400">Your Bet</p>
+                                    <p class="font-semibold text-blue-400">${betOn}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-400">Odd</p>
+                                    <p class="font-semibold text-gray-300">${betOdds.toFixed(2)}</p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-gray-400">Amount</p>
+                                    <p class="font-semibold text-gray-300">${ethers.formatEther(betAmount)} ETH</p>    
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-gray-400">Potential Win</p>
+                                    <p class="font-semibold text-green-500">${potentialWin} ETH</p>    
+                                </div>
+                            </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error(`Error fetching bets for ${matchKey}:`, error);
+                }
+            }
+
+            if (!hasActiveBets) {
+                myBetsContainer.innerHTML = '<p class="text-center text-gray-500">You have no active bets.</p>';
+            } else {
+                myBetsContainer.innerHTML = activeBetsHtml;
+            }
+        }
+
+
+        // --- Event Listeners ---
+        connectButton.addEventListener('click', connectWallet);
+
+        // Modal listeners
+        closeNetworkModalButton.addEventListener('click', () => closeModal('networkModal'));
+        networkButton.addEventListener('click', () => openModal('networkModal'));
+        rewardsButton.addEventListener('click', fetchRewards);
+        historyButton.addEventListener('click', showHistory);
+        myBetsButton.addEventListener('click', showMyBets);
+        closeRewardsModalButton.addEventListener('click', () => closeModal('rewardsModal'));
+        closeHistoryModalButton.addEventListener('click', () => closeModal('historyModal'));
+        closeMyBetsModalButton.addEventListener('click', () => closeModal('myBetsModal'));
+        cancelBetButton.addEventListener('click', () => closeModal('betModal'));
+        confirmBetButton.addEventListener('click', handleConfirmBet);
+        betAmountInput.addEventListener('input', calculatePotentialWin);
+        betMaxButton.addEventListener('click', async () => {
+            const balance = await provider.getBalance(userAddress);
+            betAmountInput.value = ethers.formatEther(balance);
+            calculatePotentialWin();
+        });
+
+        // --- CLICK OUTSIDE TO CLOSE MODAL ---
+        ['networkModal', 'walletDetailsModal', 'rewardsModal', 'historyModal', 'betModal', 'myBetsModal'].forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal) {
+                        closeModal(modalId);
+                    }
+                });
+            }
+        });
+
+        // Wallet detail modal listeners
+        closeWalletDetailsModalButton.addEventListener('click', () => closeModal('walletDetailsModal'));
+        copyAddressButton.addEventListener('click', () => {
+            const addressToCopy = userAddress;
+            const textArea = document.createElement('textarea');
+            textArea.value = addressToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showAlert('Address copied!', 'success');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                showAlert('Failed to copy address.', 'error');
+            }
+            document.body.removeChild(textArea);
+        });
+
+        disconnectButton.addEventListener('click', () => {
+            localStorage.removeItem('walletConnected');
+            window.location.reload();
+        });
+
+
+        async function initializeApp() {
+            renderNetworkList();
+            loadMatchData();
+            formatAllDates();
+            updateAllMatchStatuses();
+            setInterval(updateAllMatchStatuses, 10000); // Update status every 10 seconds
+
+            if (window.ethereum) {
+                try {
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    handleChainChanged(chainId);
+
+                    if (localStorage.getItem('walletConnected') === 'true') {
+                        await connectWallet();
+                    }
+
+                    window.ethereum.on('accountsChanged', (accounts) => {
+                        if (accounts.length === 0) {
+                            localStorage.removeItem('walletConnected');
+                        }
+                        window.location.reload();
+                    });
+
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                } catch (error) {
+                    console.error("Could not get chainId on init:", error);
+                    handleChainChanged(null); // Handle case where wallet is locked
+                }
+            } else {
+                updateNetworkButton(currentNetwork);
+            }
+        }
+
+        window.addEventListener('load', initializeApp);
+
+    </script>
+</body>
+
+</html>
