@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Variabel Tema CSS */
+:root {
+    --color-primary: #3b82f6;
+    /* blue-500 */
+    --color-primary-hover: #2563eb;
+    /* blue-600 */
+    --color-primary-light: #39393b;
+    /* blue-50 */
+    --color-danger: #ef4444;
+    /* red-500 */
+    --color-danger-hover: #dc2626;
+    /* red-600 */
+    --color-secondary: #3b82f6;
+    /* purple-500 */
+    --color-secondary-hover: #2563eb;
+    /* purple-600 */
+    --color-text-on-primary: #ffffff;
+    --scrollbar-track-bg: #f1f5f9;
+    /* gray-100 */
+    --scrollbar-thumb-bg: #94a3b8;
+    /* slate-400 */
+    --scrollbar-thumb-hover-bg: #64748b;
+    /* slate-500 */
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    padding-top: 80px;
+    padding-bottom: 80px;
+}
+
+.tab-button.active {
+    border-color: linear-gradient(to right, #0ea5e9, #06b6d4, #2563eb);
+    color: #3b82f6;
+    background-color: var(--color-primary-light);
+}
+
+.modal {
+    transition: opacity 0.25s ease;
+}
+
+.alert-popup {
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.btn {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-on-primary);
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #0ea5e9, #06b6d4, #2563eb);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #0284c7, #0e7490);
+}
+
+.btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: linear-gradient(to right, #0ea5e9, #06b6d4, #2563eb);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(to right, #0284c7, #0e7490);
+}

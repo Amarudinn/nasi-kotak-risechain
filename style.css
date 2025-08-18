@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --color-primary: #3b82f6;
+    /* blue-500 */
+    --color-primary-hover: #2563eb;
+    /* blue-600 */
+    --color-primary-light: #eff6ff;
+    /* blue-50 */
+    --color-danger: #ef4444;
+    /* red-500 */
+    --color-danger-hover: #dc2626;
+    /* red-600 */
+    --color-secondary: #a855f7;
+    /* purple-500 */
+    --color-secondary-hover: #9333ea;
+    /* purple-600 */
+    --color-text-on-primary: #ffffff;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    padding-top: 80px;
+    padding-bottom: 80px;
+    background-color: #f9fafb;
+}
+
+.modal {
+    transition: opacity 0.25s ease;
+}
+
+.alert-popup {
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.btn {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-on-primary);
+    transition: background-color 0.3s;
+    width: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(to right, #0ea5e9, #06b6d4, #2563eb);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(to right, #0284c7, #0e7490);
+}
+
+.btn-primary:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background: linear-gradient(to right, #ef4444, #ec4899, #e11d48);
+    transition: background-image 0.3s ease;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(to right, #cf2727, #be185d, #b81644);
+}
+
+.status-dot {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .5;
+    }
+}
